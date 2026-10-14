@@ -125,9 +125,11 @@ async def dashboard(request: Request):
         return RedirectResponse("/login")
     stats = get_stats()
     xray_status = is_xray_running()
+    server_info = get_server_info()
     return templates.TemplateResponse("dashboard.html", {
         "request": request, "panel_name": PANEL_NAME,
         "stats": stats, "xray_status": xray_status,
+        "server_info": server_info,
         "format_bytes": format_bytes, "active_page": "dashboard"
     })
 

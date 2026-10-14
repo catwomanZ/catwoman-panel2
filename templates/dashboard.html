@@ -2,62 +2,126 @@
 {% block title %}Dashboard - {{ panel_name }}{% endblock %}
 {% block content %}
 
-<h1 class="page-title">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-    <span data-i18n="dashboard">داشبورد</span>
-</h1>
+{# اعداد بالای صفحه از همین‌جا حساب می‌شن تا توی قالب فقط نمایش داده بشن #}
+{% set total = stats.total_users or 0 %}
+{% set active = stats.active_users or 0 %}
+{% set pct = ((active * 100 / total) | round(0) | int) if total else 0 %}
+{% set cpu = server_info.cpu_percent | round(0) | int %}
+{% set ram = server_info.ram_percent | round(0) | int %}
+{% set dsk = server_info.disk_percent | round(0) | int %}
 
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-icon-wrap">
+<div class="dash-top">
+
+<!-- ===== سرصفحه ===== -->
+<section class="hero">
+    <span class="aurora a1"></span>
+    <span class="aurora a2"></span>
+    <span class="aurora a3"></span>
+
+    <div class="hero-main">
+        <div class="hero-hello">
+            <svg class="hero-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4z"/></svg>
+            <h1 class="hero-title" data-i18n="welcome">خوش آمدید</h1>
+            <p class="hero-sub">مدیریت {{ panel_name }}</p>
+        </div>
+
+        <div class="hero-status {{ 'is-on' if xray_status else 'is-off' }}">
+            <span class="pulse"></span>
+            <span data-i18n="{{ 'server_online' if xray_status else 'server_offline' }}">{{ 'هسته Xray فعال است' if xray_status else 'هسته Xray خاموش است' }}</span>
+        </div>
+    </div>
+
+    <div class="hero-ring-wrap">
+        <div class="hero-ring" style="--p: {{ pct }}%">
+            <span class="hero-ring-track"></span>
+            <span class="hero-ring-arc"></span>
+            <div class="hero-ring-in">
+                <b>{{ pct }}<i>%</i></b>
+                <span>{{ active }} / {{ total }}</span>
+            </div>
+        </div>
+        <div class="hero-cap" data-i18n="active_users">کاربر فعال</div>
+    </div>
+</section>
+
+<!-- ===== چهار عدد اصلی ===== -->
+<div class="kpi-grid">
+    <div class="kpi v-violet">
+        <div class="kpi-ic">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
-        <div class="stat-value">{{ stats.total_users }}</div>
-        <div class="stat-label" data-i18n="total_users">کل کاربران</div>
+        <div class="kpi-num">{{ stats.total_users }}</div>
+        <div class="kpi-cap" data-i18n="total_users">کل کاربران</div>
     </div>
 
-    <div class="stat-card">
-        <div class="stat-icon-wrap" style="color: var(--success); background: rgba(16,255,176,0.1);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    <div class="kpi v-cyan">
+        <div class="kpi-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
         </div>
-        <div class="stat-value">{{ stats.active_users }}</div>
-        <div class="stat-label" data-i18n="active_users">کاربر فعال</div>
+        <div class="kpi-num">{{ stats.online_users }}</div>
+        <div class="kpi-cap" data-i18n="online_now">آنلاین الان</div>
     </div>
 
-    <div class="stat-card">
-        <div class="stat-icon-wrap" style="color: var(--danger); background: rgba(255,72,118,0.1);">
+    <div class="kpi v-pink">
+        <div class="kpi-ic">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
         </div>
-        <div class="stat-value">{{ stats.disabled_users }}</div>
-        <div class="stat-label" data-i18n="disabled_users">غیرفعال</div>
+        <div class="kpi-num">{{ stats.disabled_users }}</div>
+        <div class="kpi-cap" data-i18n="disabled_users">غیرفعال</div>
     </div>
 
-    <div class="stat-card">
-        <div class="stat-icon-wrap" style="color: var(--warning); background: rgba(255,181,71,0.1);">
+    <div class="kpi v-amber">
+        <div class="kpi-ic">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         </div>
-        <div class="stat-value" style="font-size: 16px;">{{ format_bytes(stats.total_traffic) }}</div>
-        <div class="stat-label" data-i18n="total_traffic">ترافیک کل</div>
+        <div class="kpi-num sm">{{ format_bytes(stats.total_traffic) }}</div>
+        <div class="kpi-cap" data-i18n="total_traffic">ترافیک کل</div>
     </div>
 </div>
 
-<div class="server-status">
-    {% if xray_status %}
-        <div class="status-text">
-            <span class="status-dot on"></span>
-            <span style="color: var(--success);" data-i18n="server_online">هسته Xray فعال است</span>
-        </div>
-    {% else %}
-        <div class="status-text">
-            <span class="status-dot off"></span>
-            <span style="color: var(--danger);" data-i18n="server_offline">هسته Xray خاموش است</span>
-        </div>
-    {% endif %}
-</div>
+</div><!-- /dash-top -->
 
-<a href="/users/add" class="btn btn-primary btn-block">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    <span data-i18n="new_user">ساخت کاربر جدید</span>
-</a>
+<!-- ===== سلامت سرور ===== -->
+<section class="card-block">
+    <div class="block-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        <span data-i18n="server_health">سلامت سرور</span>
+        <em class="block-up"><b>{{ server_info.uptime }}</b> <span data-i18n="uptime">آپ‌تایم</span></em>
+    </div>
+
+    <div class="gauge-row">
+        <div class="gauge {{ 'is-warn' if cpu >= 60 else 'is-ok' }}{{ ' is-bad' if cpu >= 85 else '' }}">
+            <div class="gauge-ring" style="--p: {{ cpu }}%"><span>{{ cpu }}<i>%</i></span></div>
+            <div class="gauge-cap" data-i18n="cpu">پردازنده</div>
+        </div>
+        <div class="gauge {{ 'is-warn' if ram >= 60 else 'is-ok' }}{{ ' is-bad' if ram >= 85 else '' }}">
+            <div class="gauge-ring" style="--p: {{ ram }}%"><span>{{ ram }}<i>%</i></span></div>
+            <div class="gauge-cap" data-i18n="ram">رم</div>
+        </div>
+        <div class="gauge {{ 'is-warn' if dsk >= 60 else 'is-ok' }}{{ ' is-bad' if dsk >= 85 else '' }}">
+            <div class="gauge-ring" style="--p: {{ dsk }}%"><span>{{ dsk }}<i>%</i></span></div>
+            <div class="gauge-cap" data-i18n="disk">دیسک</div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== دسترسی سریع ===== -->
+<section class="quick">
+    <div class="block-title plain" data-i18n="quick_actions">دسترسی سریع</div>
+    <div class="quick-row">
+        <a href="/users/add" class="quick-a is-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span data-i18n="new_user">ساخت کاربر جدید</span>
+        </a>
+        <a href="/users" class="quick-a">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span data-i18n="users">کاربران</span>
+        </a>
+        <a href="/traffic" class="quick-a">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <span data-i18n="traffic">مصرف ترافیک</span>
+        </a>
+    </div>
+</section>
 
 {% endblock %}

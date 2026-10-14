@@ -22,6 +22,13 @@ const translations = {
         telegram: "بات تلگرام",
         traffic: "مصرف ترافیک",
         creator_support: "پشتیبانی سازنده",
+        online_now: "آنلاین الان",
+        server_health: "سلامت سرور",
+        quick_actions: "دسترسی سریع",
+        uptime: "آپ‌تایم",
+        cpu: "پردازنده",
+        ram: "رم",
+        disk: "دیسک",
     },
     en: {
         dashboard: "Dashboard",
@@ -45,6 +52,13 @@ const translations = {
         telegram: "Telegram Bot",
         traffic: "Traffic Monitor",
         creator_support: "Creator Support",
+        online_now: "Online Now",
+        server_health: "Server Health",
+        quick_actions: "Quick Actions",
+        uptime: "Uptime",
+        cpu: "CPU",
+        ram: "RAM",
+        disk: "Disk",
     }
 };
 
