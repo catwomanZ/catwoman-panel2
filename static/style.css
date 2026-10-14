@@ -1,0 +1,1332 @@
+/* ============================================================================
+   CATWOMAN — panel
+   ============================================================================
+   One stylesheet, written for a phone and a desktop at the same time. The
+   layout is the phone's until it has room not to be, and nothing here is a
+   scaled-up phone layout or a desktop layout squeezed down.
+
+   The look is the one from the subscription page: deep violet-black, sheets of
+   glass with a hairline of light along the top edge, and neon on the things
+   that are alive — cyan, violet, pink. Everything sits on a background that is
+   three soft coloured washes and a dot grid, so the glass has something to
+   refract.
+
+   House rules, so the file stays predictable:
+     - colour, radius and timing come from tokens, never from a literal
+     - glass is one recipe, repeated; it is not re-invented per component
+     - a glow means "this is interactive / this is current", nothing else
+     - the phone rules live at the bottom in media queries and are not
+       overridden by anything above them
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+/* ====== TOKENS ============================================================ */
+
+:root,
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #08070f;
+    --ink: #f3f1fb;
+    --dim: #9a94b5;
+    --faint: #6c6684;
+
+    --cyan: #22d3ee;
+    --violet: #8b5cf6;
+    --pink: #f0388f;
+    --ok: #34d399;
+    --warn: #fbbf24;
+    --bad: #fb7185;
+
+    /* one glass recipe, used everywhere */
+    --glass-a: rgba(255, 255, 255, .062);
+    --glass-b: rgba(255, 255, 255, .016);
+    --glass-edge: rgba(255, 255, 255, .10);
+    --glass-top: inset 0 1px 0 rgba(255, 255, 255, .09);
+    --well: rgba(0, 0, 0, .30);
+
+    --grad: linear-gradient(135deg, var(--pink), var(--violet) 58%, var(--cyan));
+    --grad-soft: linear-gradient(135deg, rgba(240, 56, 143, .18), rgba(139, 92, 246, .16) 58%, rgba(34, 211, 238, .14));
+
+    --ease: cubic-bezier(.2, .75, .3, 1);
+    --r: 18px;
+    --r-sm: 13px;
+    --pad: 15px;
+
+    --shadow: 0 26px 56px -40px #000;
+    --shadow-lift: 0 20px 44px -26px rgba(0, 0, 0, .9);
+
+    /* ---- names the templates call directly in inline styles -------------
+       Templates write things like style="color: var(--success)". Those are
+       part of the contract now, so the old names stay and point at the new
+       palette rather than being renamed out from under them. */
+    --bg-primary: var(--bg);
+    --bg-secondary: #0d0b18;
+    --bg-card: rgba(255, 255, 255, .045);
+    --bg-card-hover: rgba(255, 255, 255, .075);
+    --bg-input: rgba(0, 0, 0, .32);
+    --border-color: var(--glass-edge);
+    --border-hover: rgba(34, 211, 238, .55);
+    --text-primary: var(--ink);
+    --text-secondary: var(--dim);
+    --text-muted: var(--faint);
+    --accent: var(--violet);
+    --accent-2: #6366f1;
+    --accent-3: var(--cyan);
+    --accent-4: var(--pink);
+    --accent-soft: rgba(139, 92, 246, .16);
+    --accent-grad: var(--grad);
+    --accent-grad-2: linear-gradient(135deg, var(--violet), var(--pink));
+    --success: var(--ok);
+    --danger: var(--bad);
+    --warning: var(--warn);
+    --info: var(--cyan);
+    --sidebar-bg: rgba(8, 7, 15, .82);
+    --glow-purple: 0 0 34px -6px rgba(139, 92, 246, .8);
+    --glow-pink: 0 0 34px -6px rgba(240, 56, 143, .8);
+    --shadow-sm: 0 2px 10px rgba(0, 0, 0, .3);
+    --shadow-md: var(--shadow);
+    --shadow-lg: 0 30px 70px -40px #000;
+    --card-shine: none;
+}
+
+:root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #f4f1fb;
+    --ink: #17123a;
+    --dim: #5b5280;
+    --faint: #8b82a8;
+
+    --cyan: #0891b2;
+    --violet: #7c3aed;
+    --pink: #db2777;
+    --ok: #059669;
+    --warn: #d97706;
+    --bad: #e11d48;
+
+    --glass-a: rgba(255, 255, 255, .78);
+    --glass-b: rgba(255, 255, 255, .52);
+    --glass-edge: rgba(124, 58, 237, .16);
+    --glass-top: inset 0 1px 0 rgba(255, 255, 255, .9);
+    --well: rgba(255, 255, 255, .6);
+
+    --grad: linear-gradient(135deg, var(--pink), var(--violet) 58%, var(--cyan));
+    --grad-soft: linear-gradient(135deg, rgba(219, 39, 119, .10), rgba(124, 58, 237, .09) 58%, rgba(8, 145, 178, .08));
+
+    --shadow: 0 22px 44px -34px rgba(60, 30, 120, .45);
+    --shadow-lift: 0 18px 38px -22px rgba(60, 30, 120, .35);
+
+    --bg-primary: var(--bg);
+    --bg-secondary: #ffffff;
+    --bg-card: rgba(255, 255, 255, .72);
+    --bg-card-hover: rgba(255, 255, 255, .95);
+    --bg-input: rgba(255, 255, 255, .78);
+    --border-color: var(--glass-edge);
+    --border-hover: rgba(124, 58, 237, .5);
+    --text-primary: var(--ink);
+    --text-secondary: var(--dim);
+    --text-muted: var(--faint);
+    --accent: var(--violet);
+    --accent-soft: rgba(124, 58, 237, .10);
+    --sidebar-bg: rgba(255, 255, 255, .82);
+}
+
+/* ====== RESET ============================================================= */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+html, body { margin: 0; padding: 0; width: 100%; max-width: 100%; }
+
+body {
+    font-family: 'Vazirmatn', system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14.5px;
+    line-height: 1.7;
+    min-height: 100vh;
+    direction: rtl;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    transition: background .3s, color .3s;
+}
+
+/* An icon with a viewBox and no size of its own takes its size from whatever
+   contains it, which is fine in a 42px button and is a 600px glyph when the
+   container is a page. Everything that sizes its own icon overrides this. */
+svg { width: 1em; height: 1em; }
+
+img, video { max-width: 100%; }
+
+a { color: inherit; }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+::selection { background: rgba(240, 56, 143, .35); color: #fff; }
+
+/* Scrollbars, so the sidebar and the page do not look like Windows 95. */
+* { scrollbar-width: thin; scrollbar-color: rgba(139, 92, 246, .45) transparent; }
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--violet), var(--pink));
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+/* ====== THE ROOM THE GLASS SITS IN ======================================== */
+/* Three washes of colour and a dot grid, both fixed, so the page scrolls
+   behind them and the glass always has something to refract. The grid is what
+   stops large empty areas from reading as dead space. */
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background:
+        radial-gradient(46% 34% at 92% 0%, rgba(240, 56, 143, .20), transparent 62%),
+        radial-gradient(42% 32% at 0% 6%, rgba(34, 211, 238, .14), transparent 60%),
+        radial-gradient(60% 40% at 50% 104%, rgba(139, 92, 246, .20), transparent 66%);
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: .45;
+    background-image: radial-gradient(rgba(255, 255, 255, .03) 1px, transparent 1px);
+    background-size: 3px 3px;
+}
+
+:root[data-theme="light"] body::before {
+    background:
+        radial-gradient(46% 34% at 92% 0%, rgba(219, 39, 119, .13), transparent 62%),
+        radial-gradient(42% 32% at 0% 6%, rgba(8, 145, 178, .11), transparent 60%),
+        radial-gradient(60% 40% at 50% 104%, rgba(124, 58, 237, .13), transparent 66%);
+}
+
+:root[data-theme="light"] body::after {
+    background-image: radial-gradient(rgba(90, 60, 160, .055) 1px, transparent 1px);
+}
+
+/* ====== HEADER ============================================================ */
+
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+    background: linear-gradient(180deg, rgba(8, 7, 15, .94), rgba(8, 7, 15, .66) 76%, transparent);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border-bottom: 1px solid var(--glass-edge);
+}
+
+:root[data-theme="light"] .header {
+    background: linear-gradient(180deg, rgba(244, 241, 251, .94), rgba(244, 241, 251, .64) 76%, transparent);
+}
+
+/* the neon rule under the bar */
+.header::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: -1px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), var(--violet), var(--pink), transparent);
+    opacity: .7;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    max-width: 1240px;
+    margin: 0 auto;
+}
+
+.brand-logo-wrap {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    position: relative;
+    min-width: 0;
+}
+
+/* The mark, in a ring that turns. Same device as the avatar on the
+   subscription page, so the two halves of the product match. */
+.panel-logo-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 1;
+    border: 1px solid rgba(255, 255, 255, .22);
+    box-shadow: 0 0 22px -4px rgba(240, 56, 143, .8), 0 0 44px -14px rgba(139, 92, 246, .9);
+}
+
+.brand-logo-wrap::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    inset-inline-start: -3px;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    padding: 2px;
+    background: conic-gradient(from 0deg, var(--cyan), var(--violet) 34%, var(--pink) 62%, var(--cyan));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    animation: cwspin 8s linear infinite;
+    filter: drop-shadow(0 0 6px rgba(34, 211, 238, .7));
+    pointer-events: none;
+}
+
+@keyframes cwspin { to { transform: rotate(360deg); } }
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+.icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 13px;
+    display: inline-grid;
+    place-items: center;
+    cursor: pointer;
+    padding: 0;
+    color: var(--ink);
+    border: 1px solid var(--glass-edge);
+    background: linear-gradient(180deg, var(--glass-a), var(--glass-b));
+    box-shadow: var(--glass-top);
+    transition: transform .16s var(--ease), border-color .25s, box-shadow .25s;
+}
+
+.icon-btn svg { width: 17px; height: 17px; }
+
+.icon-btn:hover {
+    border-color: var(--border-hover);
+    box-shadow: var(--glass-top), 0 0 22px -8px var(--cyan);
+}
+
+.icon-btn:active { transform: scale(.93); }
+
+/* ====== NAVIGATION ======================================================== */
+/* Phone: a drawer that slides in from the reading-start edge. Desktop (see the
+   1100px block at the bottom): the same element, parked, as a real sidebar. */
+
+.nav-menu {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    left: auto;
+    width: 84%;
+    max-width: 310px;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 18px 13px calc(20px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    background:
+        linear-gradient(165deg, rgba(240, 56, 143, .10), transparent 42%),
+        linear-gradient(345deg, rgba(34, 211, 238, .09), transparent 42%),
+        var(--sidebar-bg);
+    backdrop-filter: blur(26px) saturate(180%);
+    -webkit-backdrop-filter: blur(26px) saturate(180%);
+    border-inline-start: 1px solid var(--glass-edge);
+    box-shadow: -24px 0 70px -30px #000;
+    transition: right .42s var(--ease);
+}
+
+body[data-lang="en"] .nav-menu { right: auto; left: -100%; border-inline-start: none; border-inline-end: 1px solid var(--glass-edge); }
+
+.nav-menu.active { right: 0; }
+body[data-lang="en"] .nav-menu.active { left: 0; right: auto; }
+
+/* the neon rail down the inner edge */
+.nav-menu::before {
+    content: '';
+    position: absolute;
+    top: 6%;
+    bottom: 6%;
+    inset-inline-start: 0;
+    width: 2px;
+    background: linear-gradient(180deg, transparent, var(--cyan), var(--violet), var(--pink), transparent);
+    opacity: .8;
+    pointer-events: none;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 6px 8px 16px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--glass-edge);
+}
+
+.nav-brand img {
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    object-fit: cover;
+    flex: 0 0 auto;
+    border: 1px solid rgba(255, 255, 255, .16);
+    box-shadow: 0 0 20px -6px var(--violet);
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 13px;
+    min-height: 50px;
+    border-radius: 14px;
+    border: 1px solid transparent;
+    color: var(--dim);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    position: relative;
+    transition: color .2s, background .25s, border-color .25s, transform .16s var(--ease);
+}
+
+.nav-item svg {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+    transition: color .25s, filter .25s;
+}
+
+.nav-item:hover {
+    color: var(--ink);
+    background: linear-gradient(180deg, var(--glass-a), var(--glass-b));
+    border-color: var(--glass-edge);
+}
+
+.nav-item:active { transform: scale(.98); }
+
+.nav-item.active {
+    color: var(--ink);
+    background: var(--grad-soft);
+    border-color: rgba(139, 92, 246, .38);
+    box-shadow: var(--glass-top), 0 12px 30px -22px var(--violet);
+}
+
+.nav-item.active svg { color: var(--cyan); filter: drop-shadow(0 0 7px rgba(34, 211, 238, .8)); }
+
+/* the marker on the current page */
+.nav-item.active::after {
+    content: '';
+    position: absolute;
+    inset-inline-end: 0;
+    top: 50%;
+    translate: 0 -50%;
+    width: 3px;
+    height: 20px;
+    border-radius: 999px 0 0 999px;
+    background: linear-gradient(180deg, var(--cyan), var(--violet), var(--pink));
+    box-shadow: 0 0 12px var(--violet);
+}
+
+/* the two items pinned to the bottom of the rail */
+.nav-item[href="/logout"] {
+    margin-top: 8px;
+    color: var(--bad);
+}
+
+.nav-item[href="/logout"]:hover {
+    background: rgba(251, 113, 133, .10);
+    border-color: rgba(251, 113, 133, .35);
+}
+
+.nav-item[href="/logout"] svg { color: var(--bad); }
+
+/* The creator's support link ships with its own inline colours; this keeps its
+   shape consistent with everything else while leaving the blue alone. */
+.nav-item[target="_blank"] { margin-top: auto; }
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    background: rgba(4, 3, 9, .72);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .3s var(--ease), visibility .3s;
+}
+
+.overlay.active { opacity: 1; visibility: visible; }
+
+/* ====== PAGE FRAME ======================================================== */
+
+.container {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 20px 16px 90px;
+    position: relative;
+    z-index: 1;
+}
+
+.page-title {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin: 0 0 20px;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -.4px;
+    position: relative;
+    padding-bottom: 13px;
+}
+
+.page-title svg {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 auto;
+    color: var(--cyan);
+    filter: drop-shadow(0 0 8px rgba(34, 211, 238, .7));
+}
+
+/* the underline, in the brand gradient */
+.page-title::after {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    bottom: 0;
+    width: 76px;
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--cyan), var(--violet), var(--pink));
+    box-shadow: 0 0 14px -2px var(--violet);
+}
+
+/* ====== GLASS CARD ======================================================== */
+/* One recipe. Sheets of glass get the blur; small chips inside a sheet do not,
+   because blurring a chip that sits on an already-blurred background costs
+   frames on a phone and shows nothing. */
+
+.stat-card,
+.form-section,
+.user-card,
+.server-status,
+.empty-state,
+.login-box {
+    position: relative;
+    border-radius: var(--r);
+    border: 1px solid var(--glass-edge);
+    background: linear-gradient(180deg, var(--glass-a), var(--glass-b));
+    box-shadow: var(--glass-top), var(--shadow);
+}
+
+.stat-card,
+.form-section,
+.user-card,
+.server-status,
+.login-box {
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+}
+
+/* ====== STAT CARDS ======================================================== */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 11px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    padding: 15px 14px;
+    overflow: hidden;
+    transition: transform .22s var(--ease), border-color .25s, box-shadow .3s;
+}
+
+/* the accent line along the top of each card */
+.stat-card::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--violet), var(--pink), transparent);
+    opacity: .85;
+}
+
+.stat-icon-wrap {
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 12px;
+    color: var(--violet);
+    background: var(--accent-soft);
+    border: 1px solid var(--glass-edge);
+    box-shadow: var(--glass-top);
+}
+
+.stat-icon-wrap svg { width: 21px; height: 21px; }
+
+.stat-value {
+    font-family: 'Space Grotesk', 'Vazirmatn', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -.8px;
+    font-variant-numeric: tabular-nums;
+    background: linear-gradient(180deg, var(--ink), var(--dim));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: var(--ink);
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--dim);
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+/* ====== SERVER STATUS ===================================================== */
+
+.server-status {
+    padding: 18px;
+    margin-bottom: 18px;
+    text-align: center;
+}
+
+.server-status::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), var(--violet), transparent);
+    opacity: .85;
+}
+
+.status-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.status-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    display: inline-block;
+    flex: 0 0 auto;
+    animation: cwpulse 2s ease-in-out infinite;
+}
+
+.status-dot.on { background: var(--ok); box-shadow: 0 0 14px var(--ok); }
+.status-dot.off { background: var(--bad); box-shadow: 0 0 14px var(--bad); }
+
+@keyframes cwpulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .45; transform: scale(.82); }
+}
+
+/* ====== FORM BLOCKS ======================================================= */
+
+.form-section {
+    padding: 17px 16px;
+    margin-bottom: 15px;
+}
+
+.form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 14.5px;
+    font-weight: 800;
+    margin-bottom: 15px;
+    padding-bottom: 11px;
+    border-bottom: 1px solid var(--glass-edge);
+}
+
+.form-section-title svg {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 auto;
+    color: var(--cyan);
+    filter: drop-shadow(0 0 6px rgba(34, 211, 238, .6));
+}
+
+.form-group { margin-bottom: 14px; }
+.form-group:last-child { margin-bottom: 0; }
+
+.form-label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--dim);
+    margin-bottom: 7px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: var(--r-sm);
+    border: 1px solid var(--glass-edge);
+    background: var(--well);
+    color: var(--ink);
+    font-size: 14.5px;
+    font-family: inherit;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color .25s, box-shadow .25s, background .25s;
+}
+
+.form-control::placeholder { color: var(--faint); }
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--border-hover);
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, .14), 0 0 24px -10px var(--cyan);
+}
+
+textarea.form-control {
+    min-height: 92px;
+    resize: vertical;
+    line-height: 1.8;
+}
+
+select.form-control {
+    padding-inline-end: 34px;
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--dim) 50%),
+        linear-gradient(135deg, var(--dim) 50%, transparent 50%);
+    background-position: calc(100% - 19px) calc(50% + 1px), calc(100% - 14px) calc(50% + 1px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+}
+
+body[data-lang="en"] select.form-control,
+html[dir="ltr"] select.form-control { background-position: calc(0% + 19px) calc(50% + 1px), calc(0% + 14px) calc(50% + 1px); }
+
+/* Chrome paints autofilled inputs a pale yellow that no background-color will
+   cover. This inset shadow is the only thing that does. */
+.form-control:-webkit-autofill,
+.form-control:-webkit-autofill:hover,
+.form-control:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--ink);
+    -webkit-box-shadow: 0 0 0 1000px var(--bg-secondary) inset;
+    caret-color: var(--ink);
+}
+
+input[type="file"].form-control {
+    padding: 10px 12px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+input[type="file"].form-control::file-selector-button {
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    margin-inline-end: 10px;
+    padding: 7px 13px;
+    border-radius: 10px;
+    border: 1px solid var(--glass-edge);
+    background: linear-gradient(180deg, var(--glass-a), var(--glass-b));
+    color: var(--ink);
+    cursor: pointer;
+}
+
+/* ====== BUTTONS =========================================================== */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 18px;
+    border-radius: var(--r-sm);
+    border: 1px solid var(--glass-edge);
+    background: linear-gradient(180deg, var(--glass-a), var(--glass-b));
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--glass-top);
+    transition: transform .16s var(--ease), filter .22s, box-shadow .25s, border-color .25s;
+}
+
+.btn svg { width: 16px; height: 16px; flex: 0 0 auto; }
+.btn:active { transform: scale(.97); }
+.btn-block { width: 100%; }
+
+.btn-primary {
+    border-color: transparent;
+    color: #0b0616;
+    background: var(--grad);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 14px 30px -16px var(--violet), 0 0 26px -12px var(--pink);
+}
+
+/* A slow sheen crossing the main button. It is the one element on every page
+   that is meant to be pressed, so it is the one that moves. */
+.btn-primary::after {
+    content: '';
+    position: absolute;
+    top: -20%;
+    bottom: -20%;
+    left: -40%;
+    width: 34%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .5), transparent);
+    transform: skewX(-18deg);
+    animation: cwshine 4.6s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes cwshine {
+    0% { transform: translateX(0) skewX(-18deg); opacity: 0; }
+    12% { opacity: .9; }
+    52% { transform: translateX(520%) skewX(-18deg); opacity: 0; }
+    100% { opacity: 0; }
+}
+
+.btn-primary:hover { filter: brightness(1.07); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 16px 34px -14px var(--violet), 0 0 34px -10px var(--pink); }
+
+.btn-danger {
+    border-color: transparent;
+    color: #fff;
+    background: linear-gradient(135deg, var(--bad), #e11d48);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 12px 26px -16px var(--bad);
+}
+
+.btn-success {
+    border-color: transparent;
+    color: #04241a;
+    background: linear-gradient(135deg, #6ee7b7, var(--ok));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 12px 26px -16px var(--ok);
+}
+
+.btn-warning {
+    border-color: transparent;
+    color: #2b1a00;
+    background: linear-gradient(135deg, #fde68a, var(--warn));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 12px 26px -16px var(--warn);
+}
+
+.btn-ghost { color: var(--dim); }
+.btn-ghost:hover { color: var(--ink); border-color: var(--border-hover); }
+
+.btn-danger:hover, .btn-success:hover, .btn-warning:hover { filter: brightness(1.06); }
+
+/* ====== ALERTS ============================================================ */
+
+.alert {
+    padding: 12px 15px;
+    border-radius: var(--r-sm);
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    border: 1px solid var(--glass-edge);
+    background: linear-gradient(180deg, var(--glass-a), var(--glass-b));
+    box-shadow: var(--glass-top);
+}
+
+.alert-danger {
+    color: var(--bad);
+    border-color: rgba(251, 113, 133, .4);
+    background: linear-gradient(180deg, rgba(251, 113, 133, .16), rgba(251, 113, 133, .05));
+}
+
+/* ====== USER CARDS ======================================================== */
+
+.user-card {
+    padding: 15px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: transform .22s var(--ease), border-color .25s, box-shadow .3s;
+}
+
+.user-card::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, var(--cyan), var(--violet), var(--pink));
+    box-shadow: 0 0 14px rgba(139, 92, 246, .9);
+}
+
+.user-head {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 12px;
+}
+
+.user-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    flex: 0 0 auto;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, .14);
+    background: var(--accent-soft);
+    box-shadow: 0 0 20px -8px var(--violet);
+}
+
+.user-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.user-meta { flex: 1; min-width: 0; }
+
+.user-name {
+    display: block;
+    font-size: 15px;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-sub {
+    font-family: 'Space Grotesk', 'Vazirmatn', sans-serif;
+    font-size: 11px;
+    color: var(--faint);
+    letter-spacing: .5px;
+    margin-top: 2px;
+    direction: ltr;
+    text-align: start;
+}
+
+body[dir="rtl"] .user-sub { text-align: end; }
+
+.status-badge {
+    flex: 0 0 auto;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+}
+
+.status-active {
+    color: #06301f;
+    background: linear-gradient(135deg, #6ee7b7, var(--ok));
+    box-shadow: 0 0 18px -6px var(--ok);
+}
+
+.status-disabled {
+    color: #fff;
+    background: linear-gradient(135deg, var(--bad), #e11d48);
+    box-shadow: 0 0 18px -6px var(--bad);
+}
+
+:root[data-theme="light"] .status-active { color: #052e1f; }
+
+.user-info {
+    display: grid;
+    /* As many as fit, never a fixed count. Four columns in a 355px card leaves
+       74px per cell, and "10.00 GB" is 58px of glyph -- it fitted only by luck,
+       and any longer value would be silently cut off with an ellipsis. Letting
+       the grid pick the count means a narrow card drops to three columns and a
+       wide one can hold five. */
+    grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.info-item {
+    padding: 9px 10px;
+    border-radius: 12px;
+    background: var(--well);
+    border: 1px solid var(--glass-edge);
+    min-width: 0;
+}
+
+.info-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 3px;
+}
+
+.info-value {
+    font-family: 'Space Grotesk', 'Vazirmatn', sans-serif;
+    font-size: 13.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* if it ever has to be cut, cut it where a person can still read the unit */
+    direction: ltr;
+    text-align: start;
+}
+
+.user-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.user-actions .btn {
+    flex: 1 1 0;
+    min-width: 40px;
+    padding: 10px;
+}
+
+/* ====== TRAFFIC BAR ======================================================= */
+/* Segmented, like the meter on the subscription page: the fill is a gradient
+   and the track's own stripes are punched over it, so the same markup that
+   carried a plain bar now reads as a row of cells. */
+
+.progress {
+    position: relative;
+    height: 9px;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    background: var(--well);
+    border: 1px solid var(--glass-edge);
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--cyan), var(--violet), var(--pink));
+    box-shadow: 0 0 16px -2px var(--violet);
+    transition: width .6s var(--ease);
+    min-width: 3px;
+}
+
+.progress::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(90deg,
+        transparent 0 7px,
+        rgba(8, 7, 15, .85) 7px 9px);
+}
+
+:root[data-theme="light"] .progress::after {
+    background: repeating-linear-gradient(90deg,
+        transparent 0 7px,
+        rgba(255, 255, 255, .9) 7px 9px);
+}
+
+/* ====== EMPTY STATE ======================================================= */
+
+.empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--dim);
+    border-style: dashed;
+}
+
+.empty-state svg {
+    width: 54px;
+    height: 54px;
+    display: block;
+    margin: 0 auto 12px;
+    color: var(--violet);
+    opacity: .6;
+    filter: drop-shadow(0 0 14px rgba(139, 92, 246, .6));
+}
+
+.empty-state p { margin: 0; font-size: 13.5px; font-weight: 600; }
+
+/* ====== LOGIN ============================================================= */
+
+.login-wrapper {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 78px 16px 34px;
+    position: relative;
+    z-index: 1;
+}
+
+.login-top-actions {
+    position: absolute;
+    top: calc(16px + env(safe-area-inset-top));
+    inset-inline-end: 16px;
+    display: flex;
+    gap: 8px;
+}
+
+.login-box {
+    width: 100%;
+    max-width: 400px;
+    padding: 34px 26px 30px;
+    text-align: center;
+    overflow: hidden;
+}
+
+/* the brand rule along the top edge */
+.login-box::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), var(--violet), var(--pink), transparent);
+    opacity: .9;
+}
+
+/* The mark, in the turning ring. Absolute so it can sit outside the flow of
+   the card without disturbing the text under it. */
+.login-avatar-img {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    margin: 0 auto 16px;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, .2);
+    box-shadow: 0 0 30px -6px rgba(240, 56, 143, .85), 0 0 60px -18px rgba(139, 92, 246, .95);
+}
+
+.login-box::after {
+    content: '';
+    position: absolute;
+    top: 34px;
+    left: 50%;
+    translate: -50% 0;
+    width: 98px;
+    height: 98px;
+    border-radius: 50%;
+    padding: 3px;
+    background: conic-gradient(from 0deg, var(--cyan), var(--violet) 34%, var(--pink) 62%, var(--cyan));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    animation: cwspin 9s linear infinite;
+    filter: drop-shadow(0 0 9px rgba(34, 211, 238, .75));
+    pointer-events: none;
+}
+
+.login-title {
+    font-family: 'Space Grotesk', 'Vazirmatn', sans-serif;
+    font-size: 25px;
+    font-weight: 700;
+    letter-spacing: -.5px;
+    margin: 0 0 5px;
+    background: linear-gradient(92deg, #fff, #ecc9ff 58%, #a9f0ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+:root[data-theme="light"] .login-title {
+    background: linear-gradient(92deg, #1a1333, #6d28d9 58%, #0891b2);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+.login-subtitle {
+    font-size: 12.5px;
+    color: var(--dim);
+    margin: 0 0 22px;
+}
+
+.login-box form { text-align: start; }
+
+.login-box .btn-block { margin-top: 18px; }
+
+/* the two small buttons float over the card on wide screens */
+@media (min-width: 620px) {
+    .login-top-actions { top: 22px; inset-inline-end: 24px; }
+    .login-box { padding: 40px 34px 34px; }
+}
+
+/* ====== MISC ============================================================== */
+
+.divider {
+    height: 1px;
+    margin: 16px 0;
+    background: linear-gradient(90deg, transparent, var(--glass-edge), transparent);
+}
+
+/* Anything the templates mark up with an inline accent keeps working, but the
+   type stays consistent. */
+.secondary, .total, .used { color: var(--dim); }
+
+/* ====== TABLET AND UP ===================================================== */
+/* Below this, nothing here applies: the phone layout is the file above and is
+   not touched. */
+
+@media (min-width: 768px) {
+    body { font-size: 15px; }
+
+    .header { padding: 12px 24px; }
+    .panel-logo-img { width: 44px; height: 44px; }
+    .brand-logo-wrap::before { width: 50px; height: 50px; top: -3px; inset-inline-start: -3px; }
+    .icon-btn { width: 42px; height: 42px; }
+
+    .container { padding: 26px 24px 80px; }
+    .page-title { font-size: 25px; }
+
+    .stats-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; }
+    .stat-card { padding: 16px 15px; }
+    .stat-value { font-size: 28px; }
+
+    .user-info { grid-template-columns: repeat(auto-fit, minmax(94px, 1fr)); }
+    .user-actions .btn { flex: 0 0 auto; padding: 10px 14px; }
+
+    /* Hover only exists where there is a pointer; without this the cards jump
+       under a thumb on a tablet. */
+    @media (hover: hover) {
+        .stat-card:hover,
+        .user-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-hover);
+            box-shadow: var(--glass-top), var(--shadow-lift);
+        }
+    }
+
+    /* Two columns, but only where there really are two cards to sit beside
+       each other -- a page with a single block would otherwise be laid out at
+       half width with an empty column next to it. "~" and not "+": the cards on
+       the chat-bot page have forms between them and are still one pair. */
+    form:has(> .form-section ~ .form-section),
+    .container:has(> .form-section ~ .form-section) {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 15px;
+        align-items: start;
+    }
+    form:has(> .form-section ~ .form-section) > .form-section,
+    .container:has(> .form-section ~ .form-section) > .form-section { margin-bottom: 0; }
+    form:has(> .form-section ~ .form-section) > *:not(.form-section),
+    .container:has(> .form-section ~ .form-section) > *:not(.form-section) { grid-column: 1 / -1; }
+
+    /* On a page that is a stack of cards, a form wrapped around a single card
+       is one of those cards: it takes a column instead of forcing a full-width
+       row that leaves the other column empty beside it. */
+    .container:has(> .form-section ~ .form-section) > form:has(> .form-section):not(:has(> .form-section ~ .form-section)) {
+        display: block;
+        grid-column: auto;
+        margin: 0;
+    }
+    .container:has(> .form-section ~ .form-section) > form:has(> .form-section) > .form-section { margin-bottom: 0; }
+
+    /* User cards tile across as many columns as fit. */
+    .container:has(> .user-card) {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 14px;
+        align-items: start;
+    }
+    .container:has(> .user-card) > *:not(.user-card) { grid-column: 1 / -1; }
+    .container:has(> .user-card) .user-card { margin-bottom: 0; }
+}
+
+/* ====== DESKTOP =========================================================== */
+/* The drawer becomes a real sidebar. The phone rules above still describe the
+   drawer; this parks it and takes the content out from under it. */
+
+@media (min-width: 1120px) {
+    /* Physical sides, not logical ones. The page is RTL, where inline-end is
+       the LEFT edge -- a logical padding reserves space on the side the sidebar
+       is not, and the layout slides under it. */
+    body { padding-right: 288px; }
+    body[data-lang="en"] { padding-right: 0; padding-left: 288px; }
+
+    .nav-menu,
+    body[data-lang="en"] .nav-menu {
+        right: 0;
+        left: auto;
+        width: 288px;
+        max-width: none;
+        border-inline-start: none;
+        border-inline-end: none;
+        box-shadow: none;
+        transition: none;
+        z-index: 90;
+    }
+    body[data-lang="en"] .nav-menu { right: auto; left: 0; }
+
+    .nav-menu::before { opacity: .55; }
+
+    .nav-item { min-height: 52px; padding: 13px 15px; }
+
+    /* The drawer's scrim and its toggle have nothing left to do. */
+    .overlay { display: none !important; }
+    .header-actions .icon-btn:last-child { display: none; }
+
+    .header { padding: 14px 30px; }
+    .container { padding: 30px 30px 90px; max-width: 1180px; }
+    .page-title { font-size: 27px; margin-bottom: 24px; }
+
+    .stat-card { padding: 18px 17px; }
+    .stat-value { font-size: 31px; }
+    .stat-icon-wrap { width: 46px; height: 46px; }
+
+    .user-card { padding: 17px; }
+    .form-section { padding: 20px 18px; }
+}
+
+/* ====== VERY NARROW ======================================================= */
+
+@media (max-width: 359px) {
+    .stats-grid { gap: 9px; }
+    .stat-value { font-size: 22px; }
+    .stat-icon-wrap { width: 38px; height: 38px; }
+    .stats-grid { grid-template-columns: 1fr; }
+    .login-box { padding: 30px 20px 26px; }
+}
+
+/* ====== RESPECTING A SETTING ============================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* Anything printed reads as a document, not as a dark room. */
+@media print {
+    body { background: #fff; color: #000; }
+    body::before, body::after { display: none; }
+    .header, .nav-menu, .overlay, .btn { display: none !important; }
+    .stat-card, .form-section, .user-card { border: 1px solid #ccc; background: #fff; box-shadow: none; }
+}
